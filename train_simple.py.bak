@@ -1,0 +1,87 @@
+# coding: utf-8
+
+# EXECUÇÃO
+# python train_simple.py --fonts input/example_fonts --char-classifier output/simple_char.cpickle --digit-classifier output/simple_digit.cpickle
+
+# Importando os pacotes necessários
+
+from .include.descriptors import BlockBinaryPixelSum
+from sklearn.svm import LinearSVC
+from imutils import paths
+import argparse
+import pickle
+import cv2
+
+# Construindo o Argument Parser para passar os argumentos
+ap = argparse.ArgumentParser()
+ap.add_argument("-f", "--fonts", required=True, help="Caminho para o dataset das fontes")
+ap.add_argument("-c", "--char-classifier", required=True,
+	help="Caminho para a saída do classificador de caracteres")
+ap.add_argument("-d", "--digit-classifier", required=True,
+	help="Caminho para a saída do classificador de dígitos")
+args = vars(ap.parse_args())
+
+# Inicializando a string de caracteres
+alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+# Inicializa os dados e labels para o alfabeto e os dígitos
+alphabetData = []
+digitsData = []
+alphabetLabels = []
+digitsLabels = []
+
+# Inicializando o decritor
+print("[INFO] Descrevendo as fontes de exemplo...")
+blockSizes = ((5, 5), (5, 10), (10, 5), (10, 10))
+desc = BlockBinaryPixelSum(targetSize=(30, 15), blockSizes=blockSizes)
+
+# Loop pelas formas das fontes
+for fontPath in paths.list_images(args["fonts"]):
+	
+	# Carrega a imagem da fonte, converte para tons de cinza e realiza o threshold
+	font = cv2.imread(fontPath)
+	font = cv2.cvtColor(font, cv2.COLOR_BGR2GRAY)
+	thresh = cv2.threshold(font, 128, 255, cv2.THRESH_BINARY_INV)[1]
+
+	# Detecta os contornos da imagen processada e os organiza da esquerda pra direita
+	(cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	cnts = sorted(cnts, key=lambda c:(cv2.boundingRect(c)[0] + cv2.boundingRect(c)[1]))
+
+	# Realiza o looping sobre os contornos
+	for (i, c) in enumerate(cnts):
+		# Pega a bounding box para o contorno, extrai as ROI e extrai as features
+		(x, y, w, h) = cv2.boundingRect(c)
+		roi = thresh[y:y + h, x:x + w]
+		features = desc.describe(roi)
+
+		# Verifica se é uma letra do alfabeto
+		if i < 26:
+			alphabetData.append(features)
+			alphabetLabels.append(alphabet[i])
+
+		# Se for um dígito
+		else:
+			digitsData.append(features)
+			digitsLabels.append(alphabet[i])
+
+# Realiza o treinamento do classificador de caracteres
+print("[INFO] Treinando classificador de caracteres...")
+charModel = LinearSVC(C=1.0, random_state=42)
+charModel.fit(alphabetData, alphabetLabels)
+
+# Realiza o treinamento do classificador de dígitos
+print("[INFO] Treinando classificador de dígitos...")
+digitModel = LinearSVC(C=1.0, random_state=42)
+digitModel.fit(digitsData, digitsLabels)
+
+# Lançça o classificador de caracteres para um arquivo
+print("[INFO] Salvando modelos de caracteres...")
+f = open(args["char_classifier"], "w")
+f.write(pickle.dumps(charModel))
+f.close()
+
+# Lança o classificador de dígitos para um arquivo
+print("[INFO] Salvando modelos de dígitos...")
+f = open(args["digit_classifier"], "w")
+f.write(pickle.dumps(digitModel))
+f.close()

@@ -1,0 +1,92 @@
+# coding: utf-8
+
+# EXECUÇÃO
+# python obter_placas.py --imagens ../full_lp_dataset --exemplos output/exemplos
+
+# Importando os pacotes necessários
+
+from .include.license_plate import LicensePlateDetector
+from imutils import paths
+import traceback
+import argparse
+import imutils
+import random
+import cv2
+import os
+
+# Construindo o Argument Parser para passar os argumentos
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--imagens", required=True, help="Caminho para as imagens a serem classificadas")
+ap.add_argument("-e", "--exemplos", required=True, help="Caminho para o diretório de saída")
+args = vars(ap.parse_args())
+
+# Selecionar aleatoriamente uma parte das imagens, inicializar o dicionário de caracteres
+imagePaths = list(paths.list_images(args["imagens"]))
+random.shuffle(imagePaths)
+imagePaths = imagePaths[:int(len(imagePaths) * 0.5)]
+counts = {}
+
+# Looping sobre as imagens
+for imagePath in imagePaths:
+
+# Exibir o caminho da imagem
+	print(("[EXAMINANDO] {}".format(imagePath)))
+
+	try:
+
+# Carregar a imagem
+		image = cv2.imread(imagePath)
+
+# Se a largura for maior que 640 px, redimensione a imagem
+		if image.shape[1] > 640:
+			image = imutils.resize(image, width=640)
+
+# Inicializar o detector de placas e detectar os caracteres nas placas
+		lpd = LicensePlateDetector(image, numChars=7)
+		plates = lpd.detect()
+
+# Looping sobre as placas
+		for (lpBox, chars) in plates:
+
+# Desenhar as bounding boxes ao redor da placa para exibição
+# Para referência
+			plate = image.copy()
+			cv2.drawContours(plate, [lpBox], -1, (0, 255, 0), 2)
+			cv2.imshow("Placa", plate)
+
+# Looping sobre os caracteres
+			for char in chars:
+					# display the character and wait for a keypress
+					cv2.imshow("Char", char)
+					key = cv2.waitKey(0)
+
+# Se a tecla '`' for pressionada,  ignorar o caractere
+					if key == ord("`"):
+						print(("[IGNORANDO] {}".format(imagePath)))
+						continue
+
+# Pega a chave que foi passada e contrói o caminho do diretório de saída
+					key = chr(key).upper()
+					dirPath = "{}/{}".format(args["examples"], key)
+
+# Se o diretório de saída não existe, vamos criar
+					if not os.path.exists(dirPath):
+						os.makedirs(dirPath)
+
+# Escreve o caractere encontrado em um arquivo
+					count = counts.get(key, 1)
+					path = "{}/{}.png".format(dirPath, str(count).zfill(5))
+					cv2.imwrite(path, char)
+
+# Incrementa a contagem da chave atual
+					counts[key] = count + 1
+
+# Interrupção do teclado para interrompera execução e sair do looping
+	except KeyboardInterrupt:
+		break
+
+# Um erro desconhecido ocorreu com esta imagen, então não vamos processar nem exibir a mesma
+# Um traceback para debug
+	except:
+		print((traceback.format_exc()))
+		print(("[ERRO] {}".format(imagePath)))
