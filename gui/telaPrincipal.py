@@ -20,7 +20,7 @@ def iniciarMonitoramento():
     telaPrincipal.quit()
     #subprocess.run(['python /gui/telaMonitoramento.py'])
     #print(subprocess.check_output(['python /home/fernando/PycharmProjects/TG/gui/telaMonitoramento.py']))
-    print("Chama a tela de monitoramento com código novo")
+    print("Chama a tela de monitoramento com código novo GIT")
     os.system('python gui/telaMonitoramento.py')
 
 def sobreSistema():
