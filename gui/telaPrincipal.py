@@ -2,7 +2,11 @@
 import subprocess
 import os
 
-from Tkinter import *
+try:
+    from tkinter import *
+except ImportError:
+    from Tkinter import *
+
 
 def cadastrarPlaca():
     print("Chama a tela para cadastrar uma nova placa aqui")

@@ -1,7 +1,11 @@
 # coding: utf-8
 
+try:
+    from tkinter import *
+except ImportError:
+    from Tkinter import *
+
 import time
-from Tkinter import *
 import cv2
 
 import PIL

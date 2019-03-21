@@ -1,6 +1,9 @@
 #encoding=utf-8
 
-from Tkinter import *
+try:
+    from tkinter import *
+except ImportError:
+    from Tkinter import *
 
 class Application:
     def __init__(self, master=None):
