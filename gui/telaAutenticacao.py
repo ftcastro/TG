@@ -5,6 +5,7 @@ try:
 except ImportError:
     from Tkinter import *
 
+
 class Application:
     def __init__(self, master=None):
         self.fontePadrao = ("Arial", "10")
