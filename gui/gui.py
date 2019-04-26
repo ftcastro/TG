@@ -1,8 +1,19 @@
-# coding: utf-
+# coding: utf-8
 
-# USAGE: python3.6 gui/gui.py
+# USAGE: python3 gui/gui.py
 
-import os
+# Importando os arquivos de scripts e outros necessários
+import sys
+sys.path.insert(0, './scripts')
+import scripts
+
+
+# Imports to Matplotlib utilizados para o teste, devem ser retirados em  breve
+import matplotlib
+matplotlib.use("TkAgg")
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
 
 try:
     import tkinter as tk
@@ -15,17 +26,25 @@ except ImportError:
 LARGE_FONT = ("Verdana", 12)
 
 
+# Dentro dos parênteses passam as heranças.
 class MonitorGUI(tk.Tk):
+
+    # Dentro desses parênteses vão os métodos a serem inicializados assim que a classe é chamada.
+    # Self é implícito, não precisa ser passado, mas é convenção.
+    # Args são qualquer número ou variável que pode ser passado
+    # Kwargs são argumentos do teclado, basicamente dicionários
 
     def __init__(self, *args, **kwargs):
 
+        # Inicialização do Tkinter
         tk.Tk.__init__(self, *args, **kwargs)
 
-        # tk.Tk.iconbitmap(self, default="images/icon.ico")
+        # tk.Tk.wm_iconbitmap(self, default="camera.ico")
         tk.Tk.wm_title(self, "Sistema de Monitoramento")
 
         container = tk.Frame(self)
 
+        # O container é a nossa janela. Aqui está setada a orientação, o fill e se ele é expansível.
         container.pack(side="top", fill="both", expand=True)
 
         container.grid_rowconfigure(0, weight=1)
@@ -33,15 +52,15 @@ class MonitorGUI(tk.Tk):
 
         self.frames = {}
 
-        for F in (Autenticacao, PaginaPrincipal, PageTwo):
+        for F in (Autenticacao, PaginaPrincipal, Monitoramento, Cadastro, Listar, Excluir, Inserir, Editar, About):
 
             frame = F(container, self)
 
             self.frames[F] = frame
 
-            # frame.grid(row=0, column=0, sticky="nsew")
+            frame.grid(row=0, column=0, sticky="nsew")
 
-        # self.show_frame(Autenticacao)
+        self.show_frame(Autenticacao)
 
     def show_frame(self, cont):
 
@@ -51,155 +70,152 @@ class MonitorGUI(tk.Tk):
 
 class Autenticacao(tk.Frame):
 
-    def __init__(self, parent, master=None):
-
+    def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        # label = ttk.Label(self, text="Página Inicial", font=LARGE_FONT)
-        # label.pack(pady=10, padx=10)
-        #
-        # button1 = ttk.Button(self, text="Ir para página 1", command=lambda: controller.show_frame(PageOne))
-        # button1.pack()
 
-        self.fontePadrao = ("Arial", "10")
-        self.primeiroContainer = tk.Frame(master)
-        self.primeiroContainer["pady"] = 10
-        self.primeiroContainer.pack()
-        self.segundoContainer = tk.Frame(master)
-        self.segundoContainer["padx"] = 20
-        self.segundoContainer.pack()
+        label1 = ttk.Label(self, text="Autenticação")
+        label1.pack(pady=10, padx=10)
 
-        self.terceiroContainer = tk.Frame(master)
-        self.terceiroContainer["padx"] = 20
-        self.terceiroContainer.pack()
+        inputNome = ttk.Entry(self)
+        inputNome["width"] = 30
+        inputNome.pack()
 
-        self.quartoContainer = tk.Frame(master)
-        self.quartoContainer["pady"] = 20
-        self.quartoContainer.pack()
+        label2 = ttk.Label(self, text="Senha")
+        label2.pack()
 
-        self.titulo = tk.Label(self.primeiroContainer, text="Dados do usuário")
-        self.titulo["font"] = ("Arial", "10", "bold")
-        self.titulo.pack()
+        inputSenha = ttk.Entry(self)
+        inputSenha["width"] = 30
+        inputSenha["show"] = "*"
+        inputSenha.pack()
 
-        self.nomeLabel = tk.Label(self.segundoContainer, text="Nome", font=self.fontePadrao)
-        self.nomeLabel.pack(side=tk.LEFT)
-
-        self.nome = tk.Entry(self.segundoContainer)
-        self.nome["width"] = 30
-        self.nome["font"] = self.fontePadrao
-        self.nome.pack(side=tk.LEFT)
-
-        self.senhaLabel = tk.Label(self.terceiroContainer, text="Senha", font=self.fontePadrao)
-        self.senhaLabel.pack(side=tk.LEFT)
-
-        self.senha = tk.Entry(self.terceiroContainer)
-        self.senha["width"] = 30
-        self.senha["font"] = self.fontePadrao
-        self.senha["show"] = "*"
-        self.senha.pack(side=tk.LEFT)
-
-        self.autenticar = tk.Button(self.quartoContainer)
-        self.autenticar["text"] = "Autenticar"
-        self.autenticar["font"] = ("Calibri", "8")
-        self.autenticar["width"] = 12
-        self.autenticar["command"] = self.verificaSenha
-        self.autenticar.pack()
-
-        self.mensagem = tk.Label(self.quartoContainer, text="", font=self.fontePadrao)
-        self.mensagem.pack()
-
-        # Método verificar senha
-
-    def verificaSenha(self):
-
-        usuario = self.nome.get()
-        senha = self.senha.get()
-        if usuario == "admin" and senha == "admin":
-            self.mensagem["text"] = "Autenticado"
-
-            PaginaPrincipal(parent=None, controller=None)
-            print(usuario)
-            print(senha)
-
-        else:
-            self.mensagem["text"] = "Erro na autenticação"
+        button1 = ttk.Button(self, text="Autenticar", command=lambda: controller.show_frame(Monitoramento))
+        button1.pack(pady=10)
 
 
 class PaginaPrincipal(tk.Frame):
 
     def __init__(self, parent, controller):
 
-        def cadastrarPlaca():
-            print("Chama a tela para cadastrar uma nova placa aqui")
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Tela Inicial", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
 
-        def editarPlaca():
-            print("Chama a tela para editar as placas aqui")
+        button1 = ttk.Button(self, text="Monitoramento", command=lambda: controller.show_frame(Monitoramento))
+        button1.pack()
 
-        def cadastrarHorario():
-            print("Chama a tela para cadastrar um horário aqui")
+        button2 = ttk.Button(self, text="Cadastro", command=lambda: controller.show_frame(Cadastro))
+        button2.pack()
 
-        def editarHorario():
-            print("Chama a tela para editar os horários aqui")
+        button3 = ttk.Button(self, text="Listar", command=lambda: controller.show_frame(Listar))
+        button3.pack()
 
-        def iniciarMonitoramento():
-            telaPrincipal.quit()
-            # subprocess.run(['python /gui/telaMonitoramento.py'])
-            # print(subprocess.check_output(['python /home/fernando/PycharmProjects/TG/gui/telaMonitoramento.py']))
-            print("Chama a tela de monitoramento com código novo GIT")
-            os.system('python gui/telaMonitoramento.py')
+        button4 = ttk.Button(self, text="Excluir", command=lambda: controller.show_frame(Excluir))
+        button4.pack()
 
-        def sobreSistema():
-            print("Sistema de Auditoria de Transportes Coletivos")
+        button5 = ttk.Button(self, text="Inserir", command=lambda: controller.show_frame(Inserir))
+        button5.pack()
 
-        telaPrincipal = tk.Tk()
-        menu = tk.Menu(telaPrincipal)
-        telaPrincipal.config(menu=menu)
-        placasMenu = tk.Menu(menu)
-        menu.add_cascade(label="Placas", menu=placasMenu)
-        placasMenu.add_command(label="Cadastrar Placa...", command=cadastrarPlaca)
-        placasMenu.add_command(label="Editar Placas...", command=editarPlaca)
+        button6 = ttk.Button(self, text="Editar", command=lambda: controller.show_frame(Editar))
+        button6.pack()
 
-        horariosMenu = tk.Menu(menu)
-        menu.add_cascade(label="Horários", menu=horariosMenu)
-        horariosMenu.add_command(label="Cadastrar Horário...", command=cadastrarHorario)
-        horariosMenu.add_command(label="Editar Horários...", command=editarHorario)
-
-        monitoramentoMenu = tk.Menu(menu)
-        menu.add_cascade(label="Monitoramento", menu=monitoramentoMenu)
-        monitoramentoMenu.add_command(label="Iniciar Monitoramento", command=iniciarMonitoramento)
-
-        sobreMenu = tk.Menu(menu)
-        menu.add_cascade(label="Sobre", menu=sobreMenu)
-        sobreMenu.add_command(label="Sobre o Sistema...", command=sobreSistema)
-        sobreMenu.add_separator()
-        sobreMenu.add_command(label="Sair", command=telaPrincipal.quit)
-
-        telaPrincipal.geometry("600x450+650+150")
-        telaPrincipal.title("Sistema de Monitoramento de Transportes")
-
-        # tk.Frame.__init__(self, parent)
-        # label = ttk.Label(self, text="Página 1", font=LARGE_FONT)
-        # label.pack(pady=10, padx=10)
-        #
-        # button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(StartPage))
-        # button1.pack()
-        #
-        # button2 = ttk.Button(self, text="Ir para a Página 2", command=lambda: controller.show_frame(PageTwo))
-        # button2.pack()
+        button7 = ttk.Button(self, text="About", command=lambda: controller.show_frame(About))
+        button7.pack()
 
 
-class PageTwo(tk.Frame):
+class Monitoramento(tk.Frame):
 
     def __init__(self, parent, controller):
 
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Página 2", font=LARGE_FONT)
+        label = ttk.Label(self, text="Monitoramento", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        # button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(StartPage))
-        # button1.pack()
-        #
-        # button2 = ttk.Button(self, text="Ir para página 1", command=lambda: controller.show_frame(PageOne))
-        # button2.pack()
+        button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(PaginaPrincipal))
+        button1.pack()
+
+
+class Cadastro(tk.Frame):
+
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Cadastro", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(PaginaPrincipal))
+        button1.pack()
+
+
+class Listar(tk.Frame):
+
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Listar", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(PaginaPrincipal))
+        button1.pack()
+
+
+class Excluir(tk.Frame):
+
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Excluir", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(PaginaPrincipal))
+        button1.pack()
+
+
+class Inserir(tk.Frame):
+
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Inserir", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(PaginaPrincipal))
+        button1.pack()
+
+
+class Editar(tk.Frame):
+
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Editar", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(PaginaPrincipal))
+        button1.pack()
+
+
+class About(tk.Frame):
+
+    def __init__(self, parent, controller):
+
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Graph Page", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button1 = ttk.Button(self, text="Voltar para a Página Inicial", command=lambda: controller.show_frame(PaginaPrincipal))
+        button1.pack()
+
+        f = Figure(figsize=(5, 5), dpi=100)
+        a = f.add_subplot(111)
+        a.plot([1, 2, 3, 4, 5, 6, 7, 8], [5, 6, 1, 3, 8, 9, 3, 1])
+
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.show()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand = True)
+
+        toolbar = NavigationToolbar2TkAgg(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand = True)
 
 
 app = MonitorGUI()
